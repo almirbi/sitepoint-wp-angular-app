@@ -1,0 +1,19 @@
+<div class="container">
+  <h1>Posts</h1>
+  <ul>
+    <li ng-repeat="post in posts">
+      <a href="{{post.link}}"
+         target="_blank">{{post.title.rendered}}</a>
+      <a ng-click="editPost(post.id)"
+         ng-show="user.capabilities.edit_posts">Edit</a>
+    </li>
+  </ul>
+
+  <form id="editPost" style="display: none;" class="edit">
+    <label for="title">Post title:</label>
+    <input type="text" id="title" ng-model="title">
+    <label for="content">Content</label>
+    <textarea id="content" ng-model="content"></textarea>
+    <a ng-click="updatePost()">Save</a>
+  </form>
+</div>
