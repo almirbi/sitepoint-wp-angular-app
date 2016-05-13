@@ -1,84 +1,87 @@
-'use strict';
+// app/scripts/controllers/posts.js
 
-/**
- * @ngdoc function
- * @name publicApp.controller:MainCtrl
- * @description
- * # MainCtrl
- * Controller of the publicApp
- */
 angular.module('publicApp')
-  .controller('PostsCtrl', function ($http, $scope, $cookies, $httpParamSerializerJQLike) {
-      $scope.title = '';
-      $scope.content = '';
-      $scope.id = '';
+    .controller('PostsCtrl', function ($http, $scope, $cookies, $httpParamSerializerJQLike) {
+        var apiUrl = 'http://sitepoint-wp-rest-api.test/wp-json/wp/v2';
 
-      $scope.updatePost = function() {
+        $scope.post = {
+            title: '',
+            content: ''
+        }
 
-          $http({
-              url: "http://sitepoint.local/wp-json/wp/v2/posts/" + $scope.id + "/?access_token=" + $cookies.get('wordpress_access_token'),
-              method: "POST",
-              headers: {
-                  "content-type": "application/x-www-form-urlencoded"
-              },
-              data: $httpParamSerializerJQLike({
-                  title: $scope.title,
-                  content: $scope.content
-              })
-          }).then(function successCallback(response) {
-              console.log(response);
+        // Retrieve user permissions
+        // First get the current user id
+        $http({
+            method: 'GET',
+            url: apiUrl + '/users/me/?access_token=' + $cookies.get('wordpress_access_token')
+        }).then(function successCallback(response) {
 
-              for (var i = 0; i < $scope.posts.length; i++) {
-                  if ($scope.posts[i].id == $scope.id) {
-                      $scope.posts[i] = response.data;
-                  }
-              }
-          }, function errorCallback(response) {
-              console.log(response);
-          });
-      };
+            // second API call to get more details about the current user, e.g. capabilities
+            $http({
+                method: 'GET',
+                url: apiUrl + '/users/' + response.data.id + '/?context=edit&access_token=' + $cookies.get('wordpress_access_token')
+            }).then(function successCallback(response) {
+                console.log(response.data);
+                $scope.user = response.data;
+            }, function errorCallback(response) {
+                console.log(response);
+            });
+            $scope.user = response.data;
+        }, function errorCallback(response) {
+            console.log(response);
+        });
 
-      $scope.editPost = function(id) {
-          document.getElementById('editPost').style.display = 'block';
-          $scope.title = '';
-          $scope.content = '';
-          $scope.id = id;
-          for (var i = 0; i < $scope.posts.length; i++) {
-              if ($scope.posts[i].id == id) {
-                  $scope.title = $scope.posts[i].title.rendered;
-                  $scope.content = $scope.posts[i].content.rendered;
-              }
-          }
-      };
+        // Retrieve all posts
+        $http({
+            method: 'GET',
+            url: apiUrl + '/posts'
+        }).then(function successCallback(response) {
+            console.log(response.data);
+            $scope.posts = response.data;
+        }, function errorCallback(response) {
+            console.log(response);
+        });
 
+        // Edit post button
+        $scope.editPost = function(id) {
+            document.getElementById('editPost').style.display = 'block';
+            $scope.post.title = '';
+            $scope.post.content = '';
+            $scope.post.id = id;
+            for (var i = 0; i < $scope.posts.length; i++) {
+                if ($scope.posts[i].id === id) {
+                    $scope.post.title = $scope.posts[i].title.rendered;
+                    $scope.post.content = $scope.posts[i].content.rendered;
+                }
+            }
+        };
 
-      $http({
-          method: 'GET',
-          url: 'http://sitepoint.local/wp-json/wp/v2/posts'
-      }).then(function successCallback(response) {
-          console.log(response.data);
-          $scope.posts = response.data;
-      }, function errorCallback(response) {
-          console.log(response);
-      });
+        // Update post
+        $scope.updatePost = function() {
+            $http({
+                url: apiUrl + '/posts/' + $scope.post.id + '/?context=edit&access_token=' + $cookies.get('wordpress_access_token'),
+                method: "POST",
+                headers: {
+                    'content-type': 'application/x-www-form-urlencoded'
+                },
+                data: $httpParamSerializerJQLike({
+                    title: $scope.post.title,
+                    content: $scope.post.content
+                })
+            }).then(function successCallback(response) {
+                console.log(response);
 
-      $http({
-          method: 'GET',
-          url: 'http://sitepoint.local/wp-json/wp/v2/users/me/?context=edit&access_token=' + $cookies.get('wordpress_access_token')
-      }).then(function successCallback(response) {
-          var user = response.data;
+                for (var i = 0; i < $scope.posts.length; i++) {
+                    if ($scope.posts[i].id == $scope.post.id) {
+                        $scope.posts[i] = response.data;
+                    }
+                }
 
-          $http({
-              method: 'GET',
-              url: 'http://sitepoint.local/wp-json/wp/v2/users/' + user.id + '/?context=edit&access_token=' + $cookies.get('wordpress_access_token')
-          }).then(function successCallback(response) {
-              console.log(response.data);
-              $scope.user = response.data;
-          }, function errorCallback(response) {
-              console.log(response);
-          });
-          $scope.user = response.data;
-      }, function errorCallback(response) {
-          console.log(response);
-      });
-  });
+                document.getElementById('editPost').style.display = 'none';
+                document.getElementById('responseMessage').innerHTML = 'Succesfuly updated post.' + $scope.post.id;
+
+            }, function errorCallback(response) {
+                console.log(response);
+            });
+        };
+    });

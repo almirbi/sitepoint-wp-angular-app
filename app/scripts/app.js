@@ -2,25 +2,25 @@
 
 /**
  * @ngdoc overview
- * @name publicApp
+ * @name wwwApp
  * @description
- * # publicApp
+ * # wwwApp
  *
  * Main module of the application.
  */
 angular
-  .module('publicApp', [
-    'ngRoute',
-      'ngCookies'
-  ])
-  .config(function ($routeProvider) {
-    $routeProvider
-      .when('/', {
-        templateUrl: 'views/posts.html',
-        controller: 'PostsCtrl',
-        controllerAs: 'posts'
-      })
-      .otherwise({
-        redirectTo: '/'
-      });
-  });
+    .module('publicApp', [
+        'ngRoute',
+        'ngCookies'
+    ])
+    .config(function ($routeProvider) {
+        $routeProvider
+            .when('/', {
+                templateUrl: 'views/posts.html',
+                controller: 'PostsCtrl',
+                controllerAs: 'posts'
+            })
+            .otherwise({
+                redirectTo: '/'
+            });
+    });
